@@ -256,11 +256,12 @@ def stardox(repo_link, ver, save):
                 print_info += ("Total Forks : " + fork_value)
                 #print("Total Forks : " + fork_value, verbose)
                 break
+        print(print_info)
         #stargazer_link = repository_link + "/stargazers"
         # skip fetch stargazers as it takes more time
         stargazer_link = None
         #colors.process("Fetching stargazers list", verbose)
-
+    
         # Getting list of all the stargazers
         while (stargazer_link is not None):
             stargazer_html = requests.get(stargazer_link).text
