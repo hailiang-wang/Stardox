@@ -253,7 +253,7 @@ def stardox(repo_link, ver, save):
                 #print("Total stargazers : " + star_value, verbose)
             if(string.endswith("/members")):  # Finding total members
                 fork_value = (a_tag.get_text()).strip()
-                print_info += ("Total Forks : " + fork_value)
+                print_info += (", Total Forks : " + fork_value)
                 #print("Total Forks : " + fork_value, verbose)
                 break
         print(print_info)
