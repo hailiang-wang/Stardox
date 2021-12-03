@@ -252,7 +252,9 @@ def stardox(repo_link, ver, save):
                 fork_value = (a_tag.get_text()).strip()
                 colors.success("Total Forks : " + fork_value, verbose)
                 break
-        stargazer_link = repository_link + "/stargazers"
+        #stargazer_link = repository_link + "/stargazers"
+        # skip fetch stargazers as it takes more time
+        stargazer_link = None
         colors.process("Fetching stargazers list", verbose)
 
         # Getting list of all the stargazers
@@ -272,69 +274,70 @@ def stardox(repo_link, ver, save):
                 data.name_list.append(a_tag[0].get_text())
                 username = a_tag[0].get("href")
                 data.username_list.append(username[1:])
-        count = 1
-        pos = 0
-        colors.process("Doxing started ...\n", verbose)
-        print(colors.red + "{0}".format("-") * 75, colors.green, end="\n\n")
+        # skipped        
+        #count = 1
+        #pos = 0
+        #colors.process("Doxing started ...\n", verbose)
+        #print(colors.red + "{0}".format("-") * 75, colors.green, end="\n\n")
         # Fetching details of stargazers one by one.
-        while(count <= len(data.username_list)):
-            starer_url = "https://github.com/" + data.username_list[pos]
-            user_html = requests.get(starer_url).text
-            soup3 = BeautifulSoup(user_html, "lxml")
-            repo_data = requests.get(
-                    "https://github.com/{}?tab=repositories&type=source"
-                    .format(data.username_list[pos])).text
-            repo_soup = BeautifulSoup(repo_data, "lxml")
-            a_tags = repo_soup.findAll("a")
-            repositories_list = []
-            for a_tag in a_tags:
-                if a_tag.get("itemprop") == "name codeRepository":
-                    repositories_list.append(a_tag.get_text().strip())
-            if len(repositories_list) > 0:
-                email = get_latest_commit(
-                        repositories_list[0],
-                        data.username_list[pos])  # Getting stargazer's email
-                data.email_list.append(str(email))
-            else:
-                data.email_list.append("Not enough information.")
-            if(user_html is not None):
-                items = soup3.findAll("a", {"class": "no-underline"})
-                for item in items[1:]:
-                    # Getting total repositories of the stargazer
+        #while(count <= len(data.username_list)):
+        #    starer_url = "https://github.com/" + data.username_list[pos]
+        #    user_html = requests.get(starer_url).text
+        #    soup3 = BeautifulSoup(user_html, "lxml")
+        #    repo_data = requests.get(
+        #            "https://github.com/{}?tab=repositories&type=source"
+        #            .format(data.username_list[pos])).text
+        #    repo_soup = BeautifulSoup(repo_data, "lxml")
+        #    a_tags = repo_soup.findAll("a")
+        #    repositories_list = []
+        #    for a_tag in a_tags:
+        #        if a_tag.get("itemprop") == "name codeRepository":
+#                     repositories_list.append(a_tag.get_text().strip())
+#             if len(repositories_list) > 0:
+#                 email = get_latest_commit(
+#                         repositories_list[0],
+#                         data.username_list[pos])  # Getting stargazer's email
+#                 data.email_list.append(str(email))
+#             else:
+#                 data.email_list.append("Not enough information.")
+#             if(user_html is not None):
+#                 items = soup3.findAll("a", {"class": "no-underline"})
+#                 for item in items[1:]:
+#                     # Getting total repositories of the stargazer
 
-                    data.repo_list.append(len(repositories_list))
+#                     data.repo_list.append(len(repositories_list))
 
-                    # Getting total stars by the stargazer
-                    if item.get("href").endswith("stars") is True:
-                        a_tag = item.findAll("span")
-                        star_count = a_tag[0].get_text()
-                        data.star_list.append(star_count)
-                    # Getting total followers of the stargazers
-                    if item.get("href").endswith("followers") is True:
-                        a_tag = item.findAll("span")
-                        followers_count = a_tag[0].get_text()
-                        data.followers_list.append(followers_count)
-                    # Getting following list of the stargazers
-                    if item.get("href").endswith("following") is True:
-                        a_tag = item.findAll("span")
-                        following_count = a_tag[0].get_text()
-                        data.following_list.append(following_count)
-                if print_data is True:
-                    try:
-                        import structer
-                        # Plotting the tree structer of the fetched details
-                        structer.plotdata(len(data.username_list), pos, count)
-                    except ImportError:
-                        colors.error("Error importing structer module.")
-                        sys.exit(1)
-                count += 1
-                pos += 1
+#                     # Getting total stars by the stargazer
+#                     if item.get("href").endswith("stars") is True:
+#                         a_tag = item.findAll("span")
+#                         star_count = a_tag[0].get_text()
+#                         data.star_list.append(star_count)
+#                     # Getting total followers of the stargazers
+#                     if item.get("href").endswith("followers") is True:
+#                         a_tag = item.findAll("span")
+#                         followers_count = a_tag[0].get_text()
+#                         data.followers_list.append(followers_count)
+#                     # Getting following list of the stargazers
+#                     if item.get("href").endswith("following") is True:
+#                         a_tag = item.findAll("span")
+#                         following_count = a_tag[0].get_text()
+#                         data.following_list.append(following_count)
+#                 if print_data is True:
+#                     try:
+#                         import structer
+#                         # Plotting the tree structer of the fetched details
+#                         structer.plotdata(len(data.username_list), pos, count)
+#                     except ImportError:
+#                         colors.error("Error importing structer module.")
+#                         sys.exit(1)
+#                 count += 1
+#                 pos += 1
 
-        if save_data is True:
-            save_info()
+#         if save_data is True:
+#             save_info()
 
-        print("\n", colors.green + "{0}".format("-") * 75,
-              colors.green, end="\n\n")
+#         print("\n", colors.green + "{0}".format("-") * 75,
+#               colors.green, end="\n\n")
     except KeyboardInterrupt:
         print("\n\nYou're Great..!\nThanks for using :)")
         sys.exit(0)
