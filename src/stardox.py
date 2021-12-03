@@ -222,7 +222,8 @@ def stardox(repo_link, ver, save):
         # Checking if the url given is of a repository or not.
         result = verify_url(html)
         if result:
-            colors.success("Got the repository data ", verbose)
+            pass
+            #colors.success("Got the repository data ", verbose)
         else:
             colors.error("Please enter the correct URL ")
             sys.exit(0)
@@ -235,22 +236,25 @@ def stardox(repo_link, ver, save):
             sys.exit(1)
         title = getting_header(soup1)  # Getting the title of the page
         data.header = title  # Storing title of the page as Project Title
-        colors.success("Repository Title : " + title, verbose)
+        #colors.success("Repository Title : " + title, verbose)
         star_value = watch_value = fork_value = 0
 
         # Finding all the 'a' tags in response html data.
         a_tags = soup1.findAll("a")
+        print_info=""
         for a_tag in a_tags:  # Finding total stargazers of the repository
             string = a_tag.get("href")
             if(string.endswith("/watchers")):  # Finding total watchers
                 watch_value = (a_tag.get_text()).strip()
-                colors.success("Total watchers : " + watch_value, verbose)
+                #colors.success("Total watchers : " + watch_value, verbose)
             if(string.endswith("/stargazers")):  # Finding total stargazers
                 star_value = (a_tag.get_text()).strip()
-                colors.success("Total stargazers : " + star_value, verbose)
+                print_info += ("Total stargazers : " + star_value)
+                #print("Total stargazers : " + star_value, verbose)
             if(string.endswith("/members")):  # Finding total members
                 fork_value = (a_tag.get_text()).strip()
-                colors.success("Total Forks : " + fork_value, verbose)
+                print_info += ("Total Forks : " + fork_value)
+                #print("Total Forks : " + fork_value, verbose)
                 break
         #stargazer_link = repository_link + "/stargazers"
         # skip fetch stargazers as it takes more time
@@ -345,7 +349,7 @@ def stardox(repo_link, ver, save):
 
 if __name__ == '__main__':
     try:
-        Logo.header()  # For Displaying Logo
+        #Logo.header()  # For Displaying Logo
 
         parser = argparse.ArgumentParser()
         parser.add_argument('-r', '--rURL', help=" Path to repository.",
@@ -386,5 +390,5 @@ if __name__ == '__main__':
             stardox(repository_link,verbose,issave)
 
     except KeyboardInterrupt:
-        print("\n\nYou're Great..!\nThanks for using :)")
+        #print("\n\nYou're Great..!\nThanks for using :)")
         sys.exit(0)
