@@ -210,9 +210,8 @@ def get_closed_issue(repository_link):
         html = requests.get(req_url, timeout=80).text
     except (requests.exceptions.RequestException,
             requests.exceptions.HTTPError):
-        colors.error(
-            "Enter the repositories url in given format "
-            "[ https://github.com/username/repository_name ]")
+        print("Enter the repositories url in given format ")
+        print("[ https://github.com/username/repository_name ]")
         sys.exit(1)
     # Checking if the url given is of a repository or not.
     result = verify_url(html)
@@ -239,6 +238,10 @@ def percentage(part, whole):
   return "{:.1%}".format(p)
 
 def stardox(repo_link, ver, save):
+    '''
+    Succ: print result in one line
+    Error: print multi lines
+    '''
     try:
         print_data = True
         save_data = False
@@ -254,9 +257,8 @@ def stardox(repo_link, ver, save):
             html = requests.get(repository_link, timeout=80).text
         except (requests.exceptions.RequestException,
                 requests.exceptions.HTTPError):
-            colors.error(
-                "Enter the repositories url in given format "
-                "[ https://github.com/username/repository_name ]")
+            print("Enter the repositories url in given format ")
+            print("[ https://github.com/username/repository_name ]")
             sys.exit(1)
         # Checking if the url given is of a repository or not.
         result = verify_url(html)
@@ -313,30 +315,11 @@ def stardox(repo_link, ver, save):
         print_info += (". Total stargazers : " + star_value)
         print_info += (". Total Forks : " + fork_value)
 
-
-        # Finding all the 'a' tags in response html data.
-        # a_tags = soup1.findAll("a")
-        # print_info=""
-        # for a_tag in a_tags:  # Finding total stargazers of the repository
-        #     string = a_tag.get("href")
-        #     if(string.endswith("/watchers")):  # Finding total watchers
-        #         watch_value = (a_tag.get_text()).strip()
-        #         #colors.success("Total watchers : " + watch_value, verbose)
-        #     if(string.endswith("/stargazers")):  # Finding total stargazers
-        #         star_value = (a_tag.get_text()).strip()
-        #         print_info += ("Total stargazers : " + star_value)
-        #         #print("Total stargazers : " + star_value, verbose)
-        #     if(string.endswith("/members")):  # Finding total members
-        #         fork_value = (a_tag.get_text()).strip()
-        #         print_info += (", Total Forks : " + fork_value)
-        #         #print("Total Forks : " + fork_value, verbose)
-        #         break
-
-
         print(print_info)
 
-    except KeyboardInterrupt:
-        print("\n\nYou're Great..!\nThanks for using :)")
+    except BaseException as e:
+        print("\n\nError..!\nThanks for using :)")
+        print(e)
         sys.exit(0)
 
 
@@ -362,7 +345,9 @@ if __name__ == '__main__':
             import requests
             from bs4 import BeautifulSoup
         except ImportError:
-            colors.error('Error importing requests module.')
+            print('Error importing requests module.')
+            print("Install by requirements.txt first.")
+            sys.exit(1)
 
         args = parser.parse_args()
         repository_link = args.rURL
@@ -383,5 +368,5 @@ if __name__ == '__main__':
             stardox(repository_link,verbose,issave)
 
     except KeyboardInterrupt:
-        #print("\n\nYou're Great..!\nThanks for using :)")
+        print("\n\nYou're Great..!\nThanks for using :)")
         sys.exit(0)
