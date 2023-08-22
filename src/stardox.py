@@ -199,6 +199,45 @@ def save_info(dat='stardox'):
         sys.exit()
 
 
+def get_closed_issue(repository_link):
+    '''
+    Get total issues by repo link
+    '''
+    req_url = repository_link + "/issues"
+
+    try:
+        # Getting HTML page of repository
+        html = requests.get(req_url, timeout=80).text
+    except (requests.exceptions.RequestException,
+            requests.exceptions.HTTPError):
+        colors.error(
+            "Enter the repositories url in given format "
+            "[ https://github.com/username/repository_name ]")
+        sys.exit(1)
+    # Checking if the url given is of a repository or not.
+    result = verify_url(html)
+    if result:
+        pass
+    else:
+        colors.error("Please enter the correct URL ")
+        sys.exit(0)
+    # Parsing the html data using BeautifulSoup
+    soup1 = BeautifulSoup(html, "lxml")
+    try:
+        import data
+    except ImportError:
+        colors.error('Error importing data module')
+        sys.exit(1)
+
+    issue_closed_span = soup1.find("a", {"data-ga-click": "Issues, Table state, Closed"})
+    issue_closed_value = issue_closed_span.get_text().strip().split(" ")[0]
+
+    return int(issue_closed_value.strip())
+
+def percentage(part, whole):
+  p = float(part)/float(whole)
+  return "{:.1%}".format(p)
+
 def stardox(repo_link, ver, save):
     try:
         print_data = True
@@ -212,7 +251,7 @@ def stardox(repo_link, ver, save):
         verbose = ver
         try:
             # Getting HTML page of repository
-            html = requests.get(repository_link, timeout=8).text
+            html = requests.get(repository_link, timeout=80).text
         except (requests.exceptions.RequestException,
                 requests.exceptions.HTTPError):
             colors.error(
@@ -239,110 +278,63 @@ def stardox(repo_link, ver, save):
         #colors.success("Repository Title : " + title, verbose)
         star_value = watch_value = fork_value = 0
 
-        # Finding all the 'a' tags in response html data.
-        a_tags = soup1.findAll("a")
         print_info=""
-        for a_tag in a_tags:  # Finding total stargazers of the repository
-            string = a_tag.get("href")
-            if(string.endswith("/watchers")):  # Finding total watchers
-                watch_value = (a_tag.get_text()).strip()
-                #colors.success("Total watchers : " + watch_value, verbose)
-            if(string.endswith("/stargazers")):  # Finding total stargazers
-                star_value = (a_tag.get_text()).strip()
-                print_info += ("Total stargazers : " + star_value)
-                #print("Total stargazers : " + star_value, verbose)
-            if(string.endswith("/members")):  # Finding total members
-                fork_value = (a_tag.get_text()).strip()
-                print_info += (", Total Forks : " + fork_value)
-                #print("Total Forks : " + fork_value, verbose)
-                break
+
+        # Find issues
+        issue_closed_value = 0
+        issue_opened_value = 0
+        issue_total_value = 0
+        pull_value = 0
+
+        issue_opened_span = soup1.find("span", {"id": "issues-repo-tab-count"})
+        issue_opened_value = int(issue_opened_span.get_text().strip())
+
+        issue_closed_value = get_closed_issue(repository_link)
+        issue_total_value = issue_closed_value + issue_opened_value
+
+        pull_span = soup1.find("span", {"id": "pull-requests-repo-tab-count"})
+        pull_value = pull_span.get_text()
+
+
+        closed_rate = percentage(issue_closed_value, issue_total_value)
+
+        print_info += ("Opened Issues/Total Issues : " + str(issue_opened_value) + "/" + str(issue_total_value))
+        print_info += (", closed rate " + closed_rate)
+        print_info += (". PR Opened : " + pull_value)
+
+
+        # Find stargazers
+        stargazers_span = soup1.find("span", {"id": "repo-stars-counter-star"})
+        star_value = stargazers_span["title"]
+
+        fork_span = soup1.find("span", {"id": "repo-network-counter"})
+        fork_value = fork_span["title"]
+
+        print_info += (". Total stargazers : " + star_value)
+        print_info += (". Total Forks : " + fork_value)
+
+
+        # Finding all the 'a' tags in response html data.
+        # a_tags = soup1.findAll("a")
+        # print_info=""
+        # for a_tag in a_tags:  # Finding total stargazers of the repository
+        #     string = a_tag.get("href")
+        #     if(string.endswith("/watchers")):  # Finding total watchers
+        #         watch_value = (a_tag.get_text()).strip()
+        #         #colors.success("Total watchers : " + watch_value, verbose)
+        #     if(string.endswith("/stargazers")):  # Finding total stargazers
+        #         star_value = (a_tag.get_text()).strip()
+        #         print_info += ("Total stargazers : " + star_value)
+        #         #print("Total stargazers : " + star_value, verbose)
+        #     if(string.endswith("/members")):  # Finding total members
+        #         fork_value = (a_tag.get_text()).strip()
+        #         print_info += (", Total Forks : " + fork_value)
+        #         #print("Total Forks : " + fork_value, verbose)
+        #         break
+
+
         print(print_info)
-        #stargazer_link = repository_link + "/stargazers"
-        # skip fetch stargazers as it takes more time
-        stargazer_link = None
-        #colors.process("Fetching stargazers list", verbose)
-    
-        # Getting list of all the stargazers
-        while (stargazer_link is not None):
-            stargazer_html = requests.get(stargazer_link).text
-            soup2 = BeautifulSoup(stargazer_html, "lxml")
-            a_next = soup2.findAll("a")
-            for a in a_next:
-                if a.get_text() == "Next":
-                    stargazer_link = a.get('href')
-                    break
-                else:
-                    stargazer_link = None
-            follow_names = soup2.findAll("h3", {"class": "follow-list-name"})
-            for name in follow_names:
-                a_tag = name.findAll("a")
-                data.name_list.append(a_tag[0].get_text())
-                username = a_tag[0].get("href")
-                data.username_list.append(username[1:])
-        # skipped        
-        #count = 1
-        #pos = 0
-        #colors.process("Doxing started ...\n", verbose)
-        #print(colors.red + "{0}".format("-") * 75, colors.green, end="\n\n")
-        # Fetching details of stargazers one by one.
-        #while(count <= len(data.username_list)):
-        #    starer_url = "https://github.com/" + data.username_list[pos]
-        #    user_html = requests.get(starer_url).text
-        #    soup3 = BeautifulSoup(user_html, "lxml")
-        #    repo_data = requests.get(
-        #            "https://github.com/{}?tab=repositories&type=source"
-        #            .format(data.username_list[pos])).text
-        #    repo_soup = BeautifulSoup(repo_data, "lxml")
-        #    a_tags = repo_soup.findAll("a")
-        #    repositories_list = []
-        #    for a_tag in a_tags:
-        #        if a_tag.get("itemprop") == "name codeRepository":
-#                     repositories_list.append(a_tag.get_text().strip())
-#             if len(repositories_list) > 0:
-#                 email = get_latest_commit(
-#                         repositories_list[0],
-#                         data.username_list[pos])  # Getting stargazer's email
-#                 data.email_list.append(str(email))
-#             else:
-#                 data.email_list.append("Not enough information.")
-#             if(user_html is not None):
-#                 items = soup3.findAll("a", {"class": "no-underline"})
-#                 for item in items[1:]:
-#                     # Getting total repositories of the stargazer
 
-#                     data.repo_list.append(len(repositories_list))
-
-#                     # Getting total stars by the stargazer
-#                     if item.get("href").endswith("stars") is True:
-#                         a_tag = item.findAll("span")
-#                         star_count = a_tag[0].get_text()
-#                         data.star_list.append(star_count)
-#                     # Getting total followers of the stargazers
-#                     if item.get("href").endswith("followers") is True:
-#                         a_tag = item.findAll("span")
-#                         followers_count = a_tag[0].get_text()
-#                         data.followers_list.append(followers_count)
-#                     # Getting following list of the stargazers
-#                     if item.get("href").endswith("following") is True:
-#                         a_tag = item.findAll("span")
-#                         following_count = a_tag[0].get_text()
-#                         data.following_list.append(following_count)
-#                 if print_data is True:
-#                     try:
-#                         import structer
-#                         # Plotting the tree structer of the fetched details
-#                         structer.plotdata(len(data.username_list), pos, count)
-#                     except ImportError:
-#                         colors.error("Error importing structer module.")
-#                         sys.exit(1)
-#                 count += 1
-#                 pos += 1
-
-#         if save_data is True:
-#             save_info()
-
-#         print("\n", colors.green + "{0}".format("-") * 75,
-#               colors.green, end="\n\n")
     except KeyboardInterrupt:
         print("\n\nYou're Great..!\nThanks for using :)")
         sys.exit(0)
